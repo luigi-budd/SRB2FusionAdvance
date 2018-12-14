@@ -1395,6 +1395,8 @@ static int joy_open2(int joyindex)
 //
 void I_InitJoystick(void)
 {
+	SDL_Joystick *newjoy = NULL;
+
 	//I_ShutdownJoystick();
 	if (M_CheckParm("-nojoy"))
 		return;
@@ -1410,20 +1412,17 @@ void I_InitJoystick(void)
 		}
 	}
 
-	if (cv_usejoystick.value && joy_open(cv_usejoystick.value) != -1)
+	if (cv_usejoystick.value)
+		newjoy = SDL_JoystickOpen(cv_usejoystick.value-1);
+
+	if (newjoy && JoyInfo2.dev == newjoy) // don't override an active device
+		cv_usejoystick.value = I_GetJoystickDeviceIndex(JoyInfo.dev) + 1;
+	else if (newjoy && joy_open(cv_usejoystick.value) != -1)
 	{
 		// SDL's device indexes are unstable, so cv_usejoystick may not match
 		// the actual device index. So let's cheat a bit and find the device's current index.
 		JoyInfo.oldjoy = I_GetJoystickDeviceIndex(JoyInfo.dev) + 1;
 		joystick_started = 1;
-
-		// If another joystick occupied this device, deactivate that joystick
-		if (JoyInfo2.dev == JoyInfo.dev)
-		{
-			CONS_Debug(DBG_GAMELOGIC, "Joystick2 was set to the same device; disabling...\n");
-			cv_usejoystick2.value = 0;
-			I_InitJoystick2();
-		}
 	}
 	else
 	{
@@ -1432,10 +1431,15 @@ void I_InitJoystick(void)
 		cv_usejoystick.value = 0;
 		joystick_started = 0;
 	}
+
+	if (JoyInfo.dev != newjoy && JoyInfo2.dev != newjoy)
+		SDL_JoystickClose(newjoy);
 }
 
 void I_InitJoystick2(void)
 {
+	SDL_Joystick *newjoy = NULL;
+
 	//I_ShutdownJoystick2();
 	if (M_CheckParm("-nojoy"))
 		return;
@@ -1451,20 +1455,17 @@ void I_InitJoystick2(void)
 		}
 	}
 
-	if (cv_usejoystick2.value && joy_open2(cv_usejoystick2.value) != -1)
+	if (cv_usejoystick2.value)
+		newjoy = SDL_JoystickOpen(cv_usejoystick2.value-1);
+
+	if (newjoy && JoyInfo.dev == newjoy) // don't override an active device
+		cv_usejoystick2.value = I_GetJoystickDeviceIndex(JoyInfo2.dev) + 1;
+	else if (newjoy && joy_open2(cv_usejoystick2.value) != -1)
 	{
-		// SDL's device indexes are unstable, so cv_usejoystick2 may not match
+		// SDL's device indexes are unstable, so cv_usejoystick may not match
 		// the actual device index. So let's cheat a bit and find the device's current index.
 		JoyInfo2.oldjoy = I_GetJoystickDeviceIndex(JoyInfo2.dev) + 1;
 		joystick2_started = 1;
-
-		// If another joystick occupied this device, deactivate that joystick
-		if (JoyInfo.dev == JoyInfo2.dev)
-		{
-			CONS_Debug(DBG_GAMELOGIC, "Joystick1 was set to the same device; disabling...\n");
-			cv_usejoystick.value = 0;
-			I_InitJoystick();
-		}
 	}
 	else
 	{
@@ -1474,6 +1475,8 @@ void I_InitJoystick2(void)
 		joystick2_started = 0;
 	}
 
+	if (JoyInfo.dev != newjoy && JoyInfo2.dev != newjoy)
+		SDL_JoystickClose(newjoy);
 }
 
 static void I_ShutdownInput(void)
