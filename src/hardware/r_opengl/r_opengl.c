@@ -1630,6 +1630,10 @@ static void CreateModelVBO(mesh_t *mesh, mdlframe_t *frame)
 	pglBindBuffer(GL_ARRAY_BUFFER, frame->vboID);
 	pglBufferData(GL_ARRAY_BUFFER, bufferSize, buffer, GL_STATIC_DRAW);
 	free(buffer);
+
+	// Don't leave the array buffer bound to the model,
+	// since this is called mid-frame
+	pglBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 static void CreateModelVBOTiny(mesh_t *mesh, tinyframe_t *frame)
@@ -1671,6 +1675,11 @@ static void CreateModelVBOTiny(mesh_t *mesh, tinyframe_t *frame)
 	pglBindBuffer(GL_ARRAY_BUFFER, frame->vboID);
 	pglBufferData(GL_ARRAY_BUFFER, bufferSize, buffer, GL_STATIC_DRAW);
 	free(buffer);
+
+	// Don't leave the array buffer bound to the model,
+	// since this is called mid-frame
+	pglBindBuffer(GL_ARRAY_BUFFER, 0);
+}
 }
 
 EXPORT void HWRAPI(CreateModelVBOs) (model_t *model)
