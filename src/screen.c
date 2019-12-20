@@ -52,6 +52,7 @@ void (*twosmultipatchtransfunc)(void); // for cols with transparent pixels AND t
 // ------------------
 viddef_t vid;
 INT32 setmodeneeded; //video mode change needed if > 0 (the mode number to set + 1)
+INT32 setresneeded[3]; // if setresneeded[2] is > 0, set resolution
 
 static CV_PossibleValue_t scr_depth_cons_t[] = {{8, "8 bits"}, {16, "16 bits"}, {24, "24 bits"}, {32, "32 bits"}, {0, NULL}};
 
