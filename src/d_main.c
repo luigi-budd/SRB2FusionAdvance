@@ -74,7 +74,8 @@ int	snprintf(char *str, size_t n, const char *fmt, ...);
 #include "m_cond.h" // condition initialization
 #include "fastcmp.h"
 #include "keys.h"
-#include "filesrch.h" // refreshdirmenu, mainwadstally
+#include "filesrch.h" // refreshdirmenu, mainwadstally 
+#include "r_fps.h"
 
 #ifdef CMAKECONFIG
 #include "config.h"
@@ -237,7 +238,11 @@ static void D_Display(void)
 		return;
 
 	if (nodrawers)
-		return; // for comparative timing/profiling
+		return; // for comparative timing/profiling 
+
+
+
+
 
 	// check for change of screen size (video mode)
 	if (setmodeneeded && !wipe)
@@ -353,6 +358,7 @@ static void D_Display(void)
 		// draw the view directly
 		if (cv_renderview.value && !automapactive)
 		{
+			R_ApplyLevelInterpolators(cv_frameinterpolation.value == 1 ? rendertimefrac : FRACUNIT);
 			if (players[displayplayer].mo || players[displayplayer].playerstate == PST_DEAD)
 			{
 				topleft = screens[0] + viewwindowy*vid.width + viewwindowx;
@@ -396,6 +402,7 @@ static void D_Display(void)
 				if (postimgtype2)
 					V_DoPostProcessor(1, postimgtype2, postimgparam2);
 			}
+			R_RestoreLevelInterpolators();
 		}
 
 		if (lastdraw)
@@ -568,12 +575,10 @@ void D_SRB2Loop(void)
 				debugload--;
 #endif
 
-		if (!realtics && !singletics)
+		if (!realtics && !singletics  && cv_frameinterpolation.value != 1)
 		{
-			entertic++;
-			I_SleepToTic(entertic);
-			oldentertics++;
-			realtics++;
+			I_Sleep();
+			continue;
 		}
 
 #ifdef HW3SOUND
@@ -586,7 +591,36 @@ void D_SRB2Loop(void)
 			realtics = 1;
 
 		// process tics (but maybe not if realtic == 0)
-		TryRunTics(realtics);
+		TryRunTics(realtics); 
+
+
+		if (!P_AutoPause() && !paused)
+		{
+			if (cv_frameinterpolation.value == 1)
+			{
+				fixed_t entertimefrac = I_GetTimeFrac();
+				// renderdeltatics is a bit awkard to evaluate, since the system time interface is whole tic-based
+				renderdeltatics = realtics * FRACUNIT;
+				if (entertimefrac > rendertimefrac)
+					renderdeltatics += entertimefrac - rendertimefrac;
+				else
+					renderdeltatics -= rendertimefrac - entertimefrac;
+
+				rendertimefrac = entertimefrac;
+			}
+			else
+			{
+				rendertimefrac = FRACUNIT;
+				renderdeltatics = realtics * FRACUNIT;
+			}
+		}
+
+
+        if (cv_frameinterpolation.value == 1)
+		{
+			D_Display();
+		}
+		
 
 		if (lastdraw || singletics || gametic > rendergametic)
 		{
@@ -594,7 +628,7 @@ void D_SRB2Loop(void)
 			rendertimeout = entertic+TICRATE/17;
 
 			// Update display, next frame, with current state.
-			D_Display();
+			cv_frameinterpolation.value == 0 ? D_Display() : 0;
 
 			if (moviemode)
 				M_SaveFrame();
@@ -606,13 +640,18 @@ void D_SRB2Loop(void)
 			// Lagless camera! Yay!
 			if (gamestate == GS_LEVEL && netgame)
 			{
-				if (splitscreen && camera2.chase)
-					P_MoveChaseCamera(&players[secondarydisplayplayer], &camera2, false);
-				if (camera.chase)
-					P_MoveChaseCamera(&players[displayplayer], &camera, false);
+				// Evaluate the chase cam once for every local realtic
+				// This might actually be better suited inside G_Ticker or TryRunTics
+				for (tic_t chasecamtics = 0; chasecamtics < realtics; chasecamtics++)
+				{
+					if (splitscreen && camera2.chase)
+						P_MoveChaseCamera(&players[secondarydisplayplayer], &camera2, false);
+					if (camera.chase)
+						P_MoveChaseCamera(&players[displayplayer], &camera, false);
+				}
+				R_UpdateViewInterpolation();
 			}
-			D_Display();
-
+			cv_frameinterpolation.value == 0 ? D_Display() : 0;
 			if (moviemode)
 				M_SaveFrame();
 			if (takescreenshot) // Only take screenshots after drawing.

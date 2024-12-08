@@ -44,11 +44,20 @@ size_t I_GetFreeMem(size_t *total);
 
 /**	\brief  Called by D_SRB2Loop, returns current time in tics.
 */
-tic_t I_GetTime(void);
+tic_t I_GetTime(void); 
 
-/** \brief  Sleep until the next tic occurs.
+/** \brief  Get the current time as a fraction of a tic since the last tic.
 */
-void I_SleepToTic(tic_t tic);
+fixed_t I_GetTimeFrac(void);
+
+/**	\brief	Returns precise time value for performance measurement.
+  */
+precise_t I_GetPreciseTime(void);
+
+/**	\brief	Returns the difference between precise times as microseconds.
+  */
+int I_PreciseToMicros(precise_t);
+
 
 /**	\brief	The I_Sleep function
 
@@ -287,5 +296,7 @@ INT32 I_ClipboardCopy(const char *data, size_t size);
 const char *I_ClipboardPaste(void);
 
 void I_RegisterSysCommands(void);
+
+
 
 #endif

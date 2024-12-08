@@ -38,7 +38,8 @@
 #include "../g_game.h"
 #include "../st_stuff.h"
 #include "../i_system.h"
-#include "../m_cheat.h"
+#include "../m_cheat.h" 
+#include "../d_main.h"
 #ifdef ESLOPE
 #include "../p_slopes.h"
 #endif
@@ -47,7 +48,7 @@
 #ifdef NEWCLIP
 #include "hw_clip.h"
 #endif
-
+#include "../r_fps.h"
 #define R_FAKEFLOORS
 #define HWPRECIP
 #define SORTING
@@ -3393,6 +3394,7 @@ static void HWR_Subsector(size_t num)
 	INT32 light = 0;
 	extracolormap_t *floorcolormap;
 	extracolormap_t *ceilingcolormap;
+    ffloor_t *rover;
 
 #ifdef PARANOIA //no risk while developing, enough debugging nights!
 	if (num >= addsubsector)
@@ -3485,7 +3487,22 @@ static void HWR_Subsector(size_t num)
 
 	if (gr_frontsector->ffloors)
 	{
-		if (gr_frontsector->moved)
+		boolean anyMoved = gr_frontsector->moved;
+
+		if (anyMoved == false)
+		{
+			for (rover = gr_frontsector->ffloors; rover; rover = rover->next)
+			{
+				sector_t *controlSec = &sectors[rover->secnum];
+				if (controlSec->moved == true)
+				{
+					anyMoved = true;
+					break;
+				}
+			}
+		}
+
+		if (anyMoved == true)
 		{
 			gr_frontsector->numlights = sub->sector->numlights = 0;
 			R_Prep3DFloors(gr_frontsector);
@@ -3564,7 +3581,6 @@ static void HWR_Subsector(size_t num)
 	if (gr_frontsector->ffloors)
 	{
 		/// \todo fix light, xoffs, yoffs, extracolormap ?
-		ffloor_t * rover;
 		for (rover = gr_frontsector->ffloors;
 			rover; rover = rover->next)
 		{
@@ -4080,9 +4096,22 @@ static void HWR_DrawSpriteShadow(gr_vissprite_t *spr, GLPatch_t *gpatch, float t
 	fixed_t floorheight, mobjfloor;
 	float offset = 0;
 
+
+    
+    interpmobjstate_t interp = {0};
+
+	if (cv_frameinterpolation.value == 1)
+	{
+	  R_InterpolateMobjState(spr->mobj, rendertimefrac, &interp);
+	}
+	else
+	{
+	  R_InterpolateMobjState(spr->mobj, FRACUNIT, &interp);
+	}
+
 	mobjfloor = HWR_OpaqueFloorAtPos(
-		spr->mobj->x, spr->mobj->y,
-		spr->mobj->z, spr->mobj->height);
+		interp.x, interp.y,
+		interp.z, spr->mobj->height);
 	if (cv_shadowoffs.value)
 	{
 		angle_t shadowdir;
@@ -4095,9 +4124,9 @@ static void HWR_DrawSpriteShadow(gr_vissprite_t *spr, GLPatch_t *gpatch, float t
 
 		// Find floorheight
 		floorheight = HWR_OpaqueFloorAtPos(
-			spr->mobj->x + P_ReturnThrustX(spr->mobj, shadowdir, spr->mobj->z - mobjfloor),
-			spr->mobj->y + P_ReturnThrustY(spr->mobj, shadowdir, spr->mobj->z - mobjfloor),
-			spr->mobj->z, spr->mobj->height);
+			interp.x + P_ReturnThrustX(spr->mobj, shadowdir, interp.z - mobjfloor),
+			interp.y + P_ReturnThrustY(spr->mobj, shadowdir, interp.z - mobjfloor),
+			interp.z, spr->mobj->height);
 
 		// The shadow is falling ABOVE it's mobj?
 		// Don't draw it, then!
@@ -4107,21 +4136,21 @@ static void HWR_DrawSpriteShadow(gr_vissprite_t *spr, GLPatch_t *gpatch, float t
 		{
 			fixed_t floorz;
 			floorz = HWR_OpaqueFloorAtPos(
-				spr->mobj->x + P_ReturnThrustX(spr->mobj, shadowdir, spr->mobj->z - floorheight),
-				spr->mobj->y + P_ReturnThrustY(spr->mobj, shadowdir, spr->mobj->z - floorheight),
-				spr->mobj->z, spr->mobj->height);
+				interp.x + P_ReturnThrustX(spr->mobj, shadowdir, interp.z - floorheight),
+				interp.y + P_ReturnThrustY(spr->mobj, shadowdir, interp.z - floorheight),
+				interp.z, spr->mobj->height);
 			// The shadow would be falling on a wall? Don't draw it, then.
 			// Would draw midair otherwise.
 			if (floorz < floorheight)
 				return;
 		}
 
-		floorheight = FixedInt(spr->mobj->z - floorheight);
+		floorheight = FixedInt(interp.z - floorheight);
 
 		offset = floorheight;
 	}
 	else
-		floorheight = FixedInt(spr->mobj->z - mobjfloor);
+		floorheight = FixedInt(interp.z - mobjfloor);
 
 	// create the sprite billboard
 	//
@@ -4243,7 +4272,7 @@ static void HWR_DrawSpriteShadow(gr_vissprite_t *spr, GLPatch_t *gpatch, float t
 	{
 		sSurf.FlatColor.s.alpha = (UINT8)(sSurf.FlatColor.s.alpha - floorheight/4);
 		HWD.pfnDrawPolygon(&sSurf, swallVerts, 4, PF_Translucent|PF_Modulated|PF_Clip);
-	}
+	} 
 }
 
 // This is expecting a pointer to an array containing 4 wallVerts for a sprite
@@ -4251,11 +4280,26 @@ static void HWR_RotateSpritePolyToAim(gr_vissprite_t *spr, FOutVector *wallVerts
 {
 	if (cv_grspritebillboarding.value && spr && spr->mobj && wallVerts)
 	{
-		float basey = FIXED_TO_FLOAT(spr->mobj->z);
+		
+		// uncapped/interpolation
+		interpmobjstate_t interp = {0};
+
+
+		// do interpolation
+	    if (cv_frameinterpolation.value == 1)
+	    {
+	      R_InterpolateMobjState(spr->mobj, rendertimefrac, &interp);
+	    }
+	    else
+	    {
+	      R_InterpolateMobjState(spr->mobj, FRACUNIT, &interp);
+	    }
+
+        float basey = FIXED_TO_FLOAT(interp.z);
 		float lowy = wallVerts[0].y;
 		if (P_MobjFlip(spr->mobj) == -1)
 		{
-			basey = FIXED_TO_FLOAT(spr->mobj->z + spr->mobj->height);
+			basey = FIXED_TO_FLOAT(interp.z + spr->mobj->height);
 		}
 		// Rotate sprites to fully billboard with the camera
 		// X, Y, AND Z need to be manipulated for the polys to rotate around the
@@ -5458,14 +5502,33 @@ static void HWR_ProjectSprite(mobj_t *thing)
 	angle_t ang;
 	INT32 heightsec, phs;
 
+   // uncapped/interpolation
+   interpmobjstate_t interp = {0};
+	
+
+
 	if (!thing)
 		return;
 	else
+     
+
+	if (cv_frameinterpolation.value == 1)
+	{
+      R_InterpolateMobjState(thing, rendertimefrac, &interp);
+	}
+		else
+	{
+		R_InterpolateMobjState(thing, FRACUNIT, &interp);
+	}
+
+
+
 		this_scale = FIXED_TO_FLOAT(thing->scale);
 
 	// transform the origin point
-	tr_x = FIXED_TO_FLOAT(thing->x) - gr_viewx;
-	tr_y = FIXED_TO_FLOAT(thing->y) - gr_viewy;
+	tr_x = FIXED_TO_FLOAT(interp.x) - gr_viewx;
+	tr_y = FIXED_TO_FLOAT(interp.y) - gr_viewy;
+
 
 	// rotation around vertical axis
 	tz = (tr_x * gr_viewcos) + (tr_y * gr_viewsin);
@@ -5475,8 +5538,9 @@ static void HWR_ProjectSprite(mobj_t *thing)
 		return;
 
 	// The above can stay as it works for cutting sprites that are too close
-	tr_x = FIXED_TO_FLOAT(thing->x);
-	tr_y = FIXED_TO_FLOAT(thing->y);
+	tr_x = FIXED_TO_FLOAT(interp.x);
+	tr_y = FIXED_TO_FLOAT(interp.y);
+
 
 	// decide which patch to use for sprite relative to player
 #ifdef RANGECHECK
@@ -5514,8 +5578,8 @@ static void HWR_ProjectSprite(mobj_t *thing)
 	if (sprframe->rotate)
 	{
 		// choose a different rotation based on player view
-		ang = R_PointToAngle(thing->x, thing->y); // uses viewx,viewy
-		rot = (ang-thing->angle+ANGLE_202h)>>29;
+		ang = R_PointToAngle (interp.x, interp.y);
+		rot = (ang-interp.angle+ANGLE_202h)>>29;
 		//Fab: lumpid is the index for spritewidth,spriteoffset... tables
 		lumpoff = sprframe->lumpid[rot];
 		flip = sprframe->flip & (1<<rot);
@@ -5551,12 +5615,12 @@ static void HWR_ProjectSprite(mobj_t *thing)
 
 	if (thing->eflags & MFE_VERTICALFLIP)
 	{
-		gz = FIXED_TO_FLOAT(thing->z+thing->height) - FIXED_TO_FLOAT(spritecachedinfo[lumpoff].topoffset) * this_scale;
+		gz = FIXED_TO_FLOAT(interp.z + thing->height) - FIXED_TO_FLOAT(spritecachedinfo[lumpoff].topoffset) * this_scale;
 		gzt = gz + FIXED_TO_FLOAT(spritecachedinfo[lumpoff].height) * this_scale;
 	}
 	else
 	{
-		gzt = FIXED_TO_FLOAT(thing->z) + FIXED_TO_FLOAT(spritecachedinfo[lumpoff].topoffset) * this_scale;
+		gzt = FIXED_TO_FLOAT(interp.z) + FIXED_TO_FLOAT(spritecachedinfo[lumpoff].topoffset) * this_scale;
 		gz = gzt - FIXED_TO_FLOAT(spritecachedinfo[lumpoff].height) * this_scale;
 	}
 
@@ -5648,11 +5712,32 @@ static void HWR_ProjectPrecipitationSprite(precipmobj_t *thing)
 	spriteframe_t *sprframe;
 	size_t lumpoff;
 	unsigned rot = 0;
-	UINT8 flip;
+	UINT8 flip; 
+
+		if (!thing)
+		return;
+
+	// uncapped/interpolation
+    interpmobjstate_t interp = {0};
+
+	// do interpolation
+	if (cv_frameinterpolation.value == 1)
+	{
+		R_InterpolatePrecipMobjState(thing, rendertimefrac, &interp);
+	}
+		else
+	{
+		R_InterpolatePrecipMobjState(thing, FRACUNIT, &interp);
+	}
+
+
+
+
 
 	// transform the origin point
-	tr_x = FIXED_TO_FLOAT(thing->x) - gr_viewx;
-	tr_y = FIXED_TO_FLOAT(thing->y) - gr_viewy;
+	tr_x = FIXED_TO_FLOAT(interp.x) - gr_viewx;
+	tr_y = FIXED_TO_FLOAT(interp.y) - gr_viewy;
+
 
 	// rotation around vertical axis
 	tz = (tr_x * gr_viewcos) + (tr_y * gr_viewsin);
@@ -5661,8 +5746,9 @@ static void HWR_ProjectPrecipitationSprite(precipmobj_t *thing)
 	if (tz < ZCLIP_PLANE)
 		return;
 
-	tr_x = FIXED_TO_FLOAT(thing->x);
-	tr_y = FIXED_TO_FLOAT(thing->y);
+	tr_x = FIXED_TO_FLOAT(interp.x);
+	tr_y = FIXED_TO_FLOAT(interp.y);
+
 
 	// decide which patch to use for sprite relative to player
 	if ((unsigned)thing->sprite >= numsprites)
@@ -5734,7 +5820,7 @@ static void HWR_ProjectPrecipitationSprite(precipmobj_t *thing)
 	vis->colormap = colormaps;
 
 	// set top/bottom coords
-	vis->ty = FIXED_TO_FLOAT(thing->z + spritecachedinfo[lumpoff].topoffset);
+	vis->ty = FIXED_TO_FLOAT(interp.z + spritecachedinfo[lumpoff].topoffset);
 
 	vis->precip = true;
 }
@@ -6766,14 +6852,14 @@ void HWR_DoPostProcessor(player_t *player)
 		// Modifies the wave.
 		if (*type == postimg_water)
 		{
-			WAVELENGTH = 20; // Lower is longer
+			WAVELENGTH = 5; // Lower is longer
 			AMPLITUDE = 20; // Lower is bigger
-			FREQUENCY = 16; // Lower is faster
+			FREQUENCY = 8; // Lower is faster
 		}
 		else
 		{
 			WAVELENGTH = 10; // Lower is longer
-			AMPLITUDE = 30; // Lower is bigger
+			AMPLITUDE = 60; // Lower is bigger
 			FREQUENCY = 4; // Lower is faster
 		}
 
@@ -6787,7 +6873,9 @@ void HWR_DoPostProcessor(player_t *player)
 			}
 		}
 		HWD.pfnPostImgRedraw(v);
-		disStart += 1;
+		if (!(paused || P_AutoPause()))
+		disStart += FIXED_TO_FLOAT(renderdeltatics);
+
 
 		// Capture the screen again for screen waving on the intermission
 		if(gamestate != GS_INTERMISSION)
