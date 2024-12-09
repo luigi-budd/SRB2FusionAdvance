@@ -380,7 +380,7 @@ void SCR_DisplayTicRate(void)
 			++totaltics;
 
 	if (totaltics <= TICRATE/2) ticcntcolor += (V_REDMAP >> V_CHARCOLORSHIFT);
-	else if (totaltics == TICRATE) ticcntcolor += (V_BLUEMAP >> V_CHARCOLORSHIFT);
+	else if (totaltics == TICRATE) ticcntcolor += (V_SKYMAP >> V_CHARCOLORSHIFT);
 
 	if (aproxfps <= 15.0f) fpscntcolor += (V_REDMAP >> V_CHARCOLORSHIFT);
 	else if (aproxfps >= (cv_frameinterpolation.value ? 60.0f : TICRATE)) fpscntcolor += (V_GREENMAP >> V_CHARCOLORSHIFT);
