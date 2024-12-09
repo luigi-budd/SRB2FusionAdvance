@@ -236,6 +236,14 @@ UINT8 *bluemap;
 UINT8 *graymap;
 UINT8 *redmap;
 UINT8 *orangemap;
+UINT8 *skymap;
+UINT8 *lavendermap;
+UINT8 *goldmap;
+UINT8 *teamap;
+UINT8 *steelmap;
+UINT8 *pinkmap;
+UINT8 *tealmap;
+UINT8 *peachmap;
 
 // Console BG color
 UINT8 *consolebgmap = NULL;
@@ -300,6 +308,14 @@ static void CON_SetupColormaps(void)
 	bluemap   = (UINT8 *)Z_Malloc(256, PU_STATIC, NULL);
 	redmap    = (UINT8 *)Z_Malloc(256, PU_STATIC, NULL);
 	orangemap = (UINT8 *)Z_Malloc(256, PU_STATIC, NULL);
+	skymap = (UINT8 *)Z_Malloc(256, PU_STATIC, NULL);
+	lavendermap = (UINT8 *)Z_Malloc(256, PU_STATIC, NULL);
+	goldmap = (UINT8 *)Z_Malloc(256, PU_STATIC, NULL);
+	teamap = (UINT8 *)Z_Malloc(256, PU_STATIC, NULL);
+	steelmap = (UINT8 *)Z_Malloc(256, PU_STATIC, NULL);
+	pinkmap = (UINT8 *)Z_Malloc(256, PU_STATIC, NULL);
+	tealmap = (UINT8 *)Z_Malloc(256, PU_STATIC, NULL);
+	peachmap = (UINT8 *)Z_Malloc(256, PU_STATIC, NULL);
 
 	// setup the other colormaps, for console text
 
@@ -315,6 +331,14 @@ static void CON_SetupColormaps(void)
 		bluemap[i] = (UINT8)i;
 		redmap[i] = (UINT8)i;
 		orangemap[i] = (UINT8)i;
+		skymap[i] = (UINT8)i;
+		lavendermap[i] = (UINT8)i;
+		goldmap[i] = (UINT8)i;
+		teamap[i] = (UINT8)i;
+		steelmap[i] = (UINT8)i;
+		pinkmap[i] = (UINT8)i;
+		tealmap[i] = (UINT8)i;
+		peachmap[i] = (UINT8)i;
 	}
 
 	yellowmap[3] = (UINT8)103;
@@ -331,6 +355,22 @@ static void CON_SetupColormaps(void)
 	redmap[9]    = (UINT8)127;
 	orangemap[3] = (UINT8)85;
 	orangemap[9] = (UINT8)90;
+	skymap[3] = (UINT8)213;
+	skymap[9] = (UINT8)215;
+	lavendermap[3] = (UINT8)248;
+	lavendermap[9] = (UINT8)251;
+	goldmap[3] = (UINT8)114;
+	goldmap[9] = (UINT8)116;
+	teamap[3] = (UINT8)178;
+	teamap[9] = (UINT8)180;
+	steelmap[3] = (UINT8)201;
+	steelmap[9] = (UINT8)203;
+	pinkmap[3] = (UINT8)144;
+	pinkmap[9] = (UINT8)148;
+	tealmap[3] = (UINT8)220;
+	tealmap[9] = (UINT8)223;
+	peachmap[3] = (UINT8)67;
+	peachmap[9] = (UINT8)69;
 
 	// Init back colormap
 	CON_SetupBackColormap();
