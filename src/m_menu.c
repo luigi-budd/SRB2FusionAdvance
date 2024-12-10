@@ -336,6 +336,7 @@ static void M_HandleVideoMode(INT32 choice);
 static void Nextmap_OnChange(void);
 static void Newgametype_OnChange(void);
 static void Dummymares_OnChange(void);
+static void Textbox_OnChange(void);
 
 // ==========================================================================
 // CONSOLE VARIABLES AND THEIR POSSIBLE VALUES GO HERE.
@@ -397,6 +398,8 @@ static consvar_t cv_dummylives = {"dummylives", "0", CV_HIDEN, liveslimit_cons_t
 static consvar_t cv_dummycontinues = {"dummycontinues", "0", CV_HIDEN, liveslimit_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
 static consvar_t cv_dummymares = {"dummymares", "Overall", CV_HIDEN|CV_CALL, dummymares_cons_t, Dummymares_OnChange, 0, NULL, NULL, 0, 0, NULL};
 
+static CV_PossibleValue_t textbox_cons_t[] = {{0, "Solid"}, {1, "GFZROCK"}, {0, NULL}};
+static consvar_t cv_textboxstyle = {"textboxstyle", "Solid", CV_SAVE|CV_CALL, textbox_cons_t, Textbox_OnChange, 0, NULL, NULL, 0, 0, NULL};
 // ==========================================================================
 // ORGANIZATION START.
 // ==========================================================================
@@ -1329,6 +1332,7 @@ static menuitem_t OP_GameOptionsMenu[] =
 	{IT_STRING | IT_CVAR, NULL, "Uppercase Console",      &cv_allcaps,     140},
 
 	{IT_STRING | IT_CVAR, NULL, "Title Screen Demos",     &cv_rollingdemos, 150},
+	{IT_STRING | IT_CVAR, NULL, "Textbox Style",     &cv_textboxstyle, 160},
 };
 
 static menuitem_t OP_ChatOptionsMenu[] =
@@ -2028,6 +2032,17 @@ void Addons_option_Onchange(void)
 	OP_AddonsOptionsMenu[op_addons_folder].status =
 		(cv_addons_option.value == 3 ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
 }
+
+static void Textbox_OnChange(void)
+{
+
+ if(currentMenu == &OP_GameOptionsDef)
+   {
+
+	M_StartMessage(("Textboxes look like this now\n"), NULL, MM_NOTHING);
+
+   }
+};
 
 // ==========================================================================
 // END ORGANIZATION STUFF.
@@ -2833,6 +2848,7 @@ void M_Init(void)
 	CV_RegisterVar(&cv_dummylives);
 	CV_RegisterVar(&cv_dummycontinues);
 	CV_RegisterVar(&cv_dummymares);
+	CV_RegisterVar(&cv_textboxstyle);
 
 	quitmsg[QUITMSG] = M_GetText("Eggman's tied explosives\nto your girlfriend, and\nwill activate them if\nyou press the 'Y' key!\nPress 'N' to save her!\n\n(Press 'Y' to quit)");
 	quitmsg[QUITMSG1] = M_GetText("What would Tails say if\nhe saw you quitting the game?\n\n(Press 'Y' to quit)");
@@ -3036,9 +3052,13 @@ static void M_DrawSlider(INT32 x, INT32 y, const consvar_t *cv)
 void M_DrawTextBox(INT32 x, INT32 y, INT32 width, INT32 boxlines)
 {
 	// Solid color textbox.
-	V_DrawFill(x+5, y+5, width*8+6, boxlines*8+6, 239);
-	//V_DrawFill(x+8, y+8, width*8, boxlines*8, 31);
-/*
+	if (cv_textboxstyle.value == 0)
+		V_DrawFill(x+5, y+5, width*8+6, boxlines*8+6, 239);
+
+	else if (cv_textboxstyle.value == 1)
+	{
+	V_DrawFill(x+8, y+8, width*8, boxlines*8, 31);
+
 	patch_t *p;
 	INT32 cx, cy, n;
 	INT32 step, boff;
@@ -3083,8 +3103,10 @@ void M_DrawTextBox(INT32 x, INT32 y, INT32 width, INT32 boxlines)
 		cy += step;
 	}
 	V_DrawScaledPatch(cx, cy, 0, W_CachePatchNum(viewborderlump[BRDR_BR], PU_CACHE));
-*/
+	}
 }
+
+
 
 //
 // Draw border for the savegame description
