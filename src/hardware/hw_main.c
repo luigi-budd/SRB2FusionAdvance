@@ -4226,6 +4226,13 @@ static void HWR_DrawSpriteShadow(gr_vissprite_t *spr, GLPatch_t *gpatch, float t
 		swallVerts[i].y = FIXED_TO_FLOAT(slopez) + 0.05f;
 	}
 
+	if (floorslope)
+	for (int i = 0; i < 4; i++)
+	{
+		slopez = P_GetZAt(floorslope, FLOAT_TO_FIXED(swallVerts[i].x), FLOAT_TO_FIXED(swallVerts[i].z));
+		swallVerts[i].y = FIXED_TO_FLOAT(slopez) + 0.05f;
+	}
+
 	if (spr->flip)
 	{
 		swallVerts[0].sow = swallVerts[3].sow = gpatch->max_s;
