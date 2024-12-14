@@ -1408,11 +1408,7 @@ void R_RegisterEngineStuff(void)
 	CV_RegisterVar(&cv_cam_rotspeed);
 
 	CV_RegisterVar(&cv_cam_orbital);
-
-	if (rendermode == render_soft) {
-		cv_cam_orbital.defaultvalue = "Off";
-		CV_SetValue(&cv_cam_orbital, 0);
-	}
+	CV_RegisterVar(&cv_cam2_orbital);
 
 	CV_RegisterVar(&cv_cam2_dist);
 	CV_RegisterVar(&cv_cam2_still);
