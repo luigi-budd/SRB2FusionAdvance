@@ -102,6 +102,8 @@ static CV_PossibleValue_t grfiltermode_cons_t[]= {{HWD_SET_TEXTUREFILTER_POINTSA
 	{0, NULL}};
 CV_PossibleValue_t granisotropicmode_cons_t[] = {{1, "MIN"}, {16, "MAX"}, {0, NULL}};
 
+CV_PossibleValue_t glloadingscreen_cons_t[] = {{0, "OFF"}, {1, "2.1.0-2.1.4"}, {2, "Pre 2.1"},  {0, NULL}};
+
 boolean drawsky = true;
 
 // needs fix: walls are incorrectly clipped one column less
@@ -128,6 +130,8 @@ consvar_t cv_grcorrecttricks = {"gr_correcttricks", "Off", 0, CV_OnOff, NULL, 0,
 consvar_t cv_grsolvetjoin = {"gr_solvetjoin", "On", 0, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL};
 
 consvar_t cv_grmodellighting = {"gr_modellighting", "Off", CV_SAVE|CV_CALL, CV_OnOff, CV_grmodellighting_OnChange, 0, NULL, NULL, 0, 0, NULL};
+
+consvar_t cv_glloadingscreen = {"glloadingscreen", "Off", CV_SAVE, glloadingscreen_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
 
 static void CV_FogDensity_ONChange(void)
 {
@@ -6216,6 +6220,7 @@ void HWR_AddCommands(void)
 	CV_RegisterVar(&cv_grcorrecttricks);
 	CV_RegisterVar(&cv_grsolvetjoin);
 	CV_RegisterVar(&cv_grmodellighting);
+	CV_RegisterVar(&cv_glloadingscreen);
 }
 
 static inline void HWR_AddEngineCommands(void)
