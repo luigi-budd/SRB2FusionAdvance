@@ -2673,7 +2673,7 @@ static boolean P_CanSave(void)
   * \param skipprecip If true, don't spawn precipitation.
   * \todo Clean up, refactor, split up; get rid of the bloat.
   */
-boolean P_SetupLevel(boolean skipprecip, boolean reloadinggamestate)
+boolean P_SetupLevel(boolean skipprecip)
 {
 	// use gamemap to get map number.
 	// 99% of the things already did, so.
@@ -2788,7 +2788,7 @@ boolean P_SetupLevel(boolean skipprecip, boolean reloadinggamestate)
 
 	// Let's fade to black here
 	// But only if we didn't do the special stage wipe
-	if (rendermode != render_none && !(ranspecialwipe || reloadinggamestate))
+	if (rendermode != render_none && !ranspecialwipe)
 	{
 		F_WipeStartScreen();
 		V_DrawFill(0, 0, BASEVIDWIDTH, BASEVIDHEIGHT, 31);
@@ -3130,7 +3130,7 @@ boolean P_SetupLevel(boolean skipprecip, boolean reloadinggamestate)
 	P_MapEnd();
 
 	// Remove the loading shit from the screen
-	if (rendermode != render_none && !reloadinggamestate)
+	if (rendermode != render_none)
 		V_DrawFill(0, 0, BASEVIDWIDTH, BASEVIDHEIGHT, (ranspecialwipe) ? 0 : 31);
 
 	if (precache || dedicated)

@@ -56,10 +56,6 @@ typedef enum
 	PT_RESYNCHEND,    // Player is now resynched and is being requested to remake the gametic
 	PT_RESYNCHGET,    // Player got resynch packet
 
-	PT_WILLRESENDGAMESTATE, // Hey Client, I am about to resend you the gamestate!
-	PT_CANRESENDGAMESTATE,  // Okay Server, I'm ready to receive it, you can go ahead.
-	PT_RESENDGAMESTATEINFO, // Okay Client, here are some extra info you'll need.
-
 	// Add non-PT_CANFAIL packet types here to avoid breaking MS compatibility.
 
 	PT_CANFAIL,       // This is kind of a priority. Anything bigger than CANFAIL
@@ -382,11 +378,6 @@ typedef struct
 	UINT8 ctfteam;
 } ATTRPACK plrconfig;
 
-typedef struct
-{
-	tic_t gametic;
-} ATTRPACK resendgamestateinfo_pak;
-
 //
 // Network packet data
 //
@@ -417,7 +408,6 @@ typedef struct
 		msaskinfo_pak msaskinfo;            //          22 bytes
 		plrinfo playerinfo[MAXPLAYERS];     //        1152 bytes (I'd say 36~38)
 		plrconfig playerconfig[MAXPLAYERS]; // (up to) 896 bytes (welp they ARE)
-        resendgamestateinfo_pak resendgamestateinfo;
 #ifdef NEWPING
 		UINT32 pingtable[MAXPLAYERS];       //         128 bytes
 #endif
