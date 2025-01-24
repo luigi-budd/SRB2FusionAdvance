@@ -41,7 +41,7 @@ This build is maintained by members of the [Super SRB2 Games Z community](https:
 
   (originally made by Sryder13 and Golden, with some additions backported from Version 2.2, original source [here.](https://github.com/GoldenTails/SRB2-2.1/tree/orbital-camera))
 
-* ## SRB2Kart-Esque Video Options Menu! (ft. opengl menu too!)
+* ## SRB2Kart-Esque Video Options Menu (ft. opengl menu too!)
  
   Now it doesn't suck!
 
