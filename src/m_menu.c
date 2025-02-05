@@ -7634,7 +7634,7 @@ static void M_DrawJoystick(void)
 			compareval = cv_usejoystick.value;
 #else
 		compareval2 = cv_usejoystick2.value;
-		compareval = cv_usejoystick.value
+		compareval = cv_usejoystick.value;
 #endif
 
 		if ((setupcontrols_secondaryplayer && (i == compareval2))
