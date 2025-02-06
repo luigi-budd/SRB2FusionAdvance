@@ -52,6 +52,9 @@ static const GLubyte white[4] = { 255, 255, 255, 255 };
 static GLuint NOTEXTURE_NUM = 0;
 
 
+static GLuint NOTEXTURE_NUM = 0;
+
+
 
 #define      N_PI_DEMI               (M_PIl/2.0f) //(1.5707963268f)
 
