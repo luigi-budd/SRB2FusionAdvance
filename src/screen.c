@@ -121,6 +121,25 @@ void SCR_SetMode(void)
 	setmodeneeded = 0;
 }
 
+
+void SCR_SetResolution(void)
+{
+	if (dedicated)
+		return;
+
+	if (!setresneeded[2] || WipeInAction)
+		return; // should never happen and don't change it during a wipe, BAD!
+
+	VID_SetResolution(setresneeded[0], setresneeded[1]);
+
+	V_SetPalette(0);
+
+	// set the apprpriate drawers
+	SetupDrawRoutines();
+	setresneeded[2] = 0;
+}
+
+
 // do some initial settings for the game loading screen
 //
 void SCR_Startup(void)
