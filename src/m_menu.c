@@ -8169,7 +8169,7 @@ static void M_DrawVideoMode(void)
 		// custom video mode
 		if (modedescs[i].modenum == -1)
 		{
-			V_DrawCenteredString(BASEVIDWIDTH/2, OP_VideoModeDef.y+76,V_YELLOWMAP, "Custom Resolution");
+			V_DrawString(19, OP_VideoModeDef.y+76,V_YELLOWMAP, "Custom Resolution");
 			V_DrawFill(19, OP_VideoModeDef.y + 92, (vidm_customreslength*8)+4, 8+6, 239);
 			V_DrawString(22, OP_VideoModeDef.y + 95, V_ALLOWLOWERCASE|V_MONOSPACE, vidm_customres);
 			continue;
